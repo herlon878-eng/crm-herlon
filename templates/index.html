@@ -1,186 +1,96 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel - CRM Herlon</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
-    body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(-45deg, #1b262c, #0f4c75, #3282b8, #bbe1fa);
-      background-size: 400% 400%;
-      animation: gradient 10s ease infinite;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #fff;
-    }
+app = Flask(__name__)
 
-    @keyframes gradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+# Configuração do banco
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///clientes.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'segredo-herlon'
 
-    header {
-      width: 100%;
-      text-align: center;
-      padding: 25px 0;
-      background: rgba(0,0,0,0.2);
-      backdrop-filter: blur(10px);
-      font-size: 26px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
+db = SQLAlchemy(app)
 
-    .container {
-      margin-top: 40px;
-      width: 90%;
-      max-width: 800px;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 30px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
+# Modelo de Lead
+class Cliente(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=True)
+    email = db.Column(db.String(100), nullable=True)
+    telefone = db.Column(db.String(50), nullable=True)
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #fff;
-    }
+# Modelo de Admin
+class Admin(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario = db.Column(db.String(50), unique=True, nullable=False)
+    senha = db.Column(db.String(200), nullable=False)
 
-    form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
-    }
+with app.app_context():
+    db.create_all()
 
-    input[type="text"], input[type="email"], input[type="tel"] {
-      padding: 12px 15px;
-      border: none;
-      border-radius: 8px;
-      outline: none;
-      font-size: 14px;
-      width: 100%;
-      max-width: 220px;
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-    }
+# Página principal (CRM)
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        nome = request.form.get('nome', '')
+        email = request.form.get('email', '')
+        telefone = request.form.get('telefone', '')
 
-    input::placeholder {
-      color: rgba(255,255,255,0.8);
-    }
+        novo_cliente = Cliente(nome=nome, email=email, telefone=telefone)
+        db.session.add(novo_cliente)
+        db.session.commit()
 
-    button {
-      padding: 12px 20px;
-      background: #00b4d8;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
+        flash('✅ Lead cadastrado com sucesso!')
+        return redirect(url_for('index'))
 
-    button:hover {
-      background: #0077b6;
-      transform: scale(1.03);
-    }
+    clientes = Cliente.query.all()
+    return render_template('index.html', clientes=clientes)
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 25px;
-      color: #fff;
-    }
+# Excluir lead
+@app.route('/excluir/<int:id>')
+def excluir(id):
+    cliente = Cliente.query.get(id)
+    if cliente:
+        db.session.delete(cliente)
+        db.session.commit()
+        flash('❌ Lead excluído com sucesso!')
+    return redirect(url_for('index'))
 
-    th, td {
-      padding: 12px;
-      text-align: left;
-    }
+# Criar admin
+@app.route('/criar_admin', methods=['GET', 'POST'])
+def criar_admin():
+    if request.method == 'POST':
+        usuario = request.form.get('usuario')
+        senha = request.form.get('senha')
 
-    th {
-      background: rgba(0,0,0,0.3);
-    }
+        if usuario and senha:
+            senha_hash = generate_password_hash(senha)
+            novo_admin = Admin(usuario=usuario, senha=senha_hash)
+            db.session.add(novo_admin)
+            db.session.commit()
+            return "✅ Admin criado com sucesso!"
+        else:
+            return "❌ Preencha todos os campos!"
+    return render_template('criar_admin.html')
 
-    tr:nth-child(even) {
-      background: rgba(255,255,255,0.1);
-    }
+# Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        usuario = request.form.get('usuario')
+        senha = request.form.get('senha')
 
-    tr:hover {
-      background: rgba(255,255,255,0.2);
-    }
+        admin = Admin.query.filter_by(usuario=usuario).first()
+        if admin and check_password_hash(admin.senha, senha):
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', erro="❌ Usuário ou senha incorretos.")
+    return render_template('login.html')
 
-    a.delete-btn {
-      color: #ff4d4d;
-      font-weight: bold;
-      text-decoration: none;
-      transition: 0.3s;
-    }
+# Redireciona erro 404
+@app.errorhandler(404)
+def pagina_nao_encontrada(e):
+    return redirect(url_for('index'))
 
-    a.delete-btn:hover {
-      color: #ff0000;
-    }
-
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 13px;
-      color: rgba(255,255,255,0.8);
-    }
-
-    footer span {
-      color: #00b4d8;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    CRM Herlon - Gestão de Leads 💼
-  </header>
-
-  <div class="container">
-    <h2>Adicionar Novo Lead</h2>
-    <form method="POST">
-      <input type="text" name="nome" placeholder="Nome completo" required>
-      <input type="email" name="email" placeholder="E-mail" required>
-      <input type="tel" name="telefone" placeholder="Telefone" required>
-      <button type="submit">Adicionar</button>
-    </form>
-
-    <h2>Leads Cadastrados</h2>
-    <table>
-      <tr>
-        <th>Nome</th>
-        <th>E-mail</th>
-        <th>Telefone</th>
-        <th>Ações</th>
-      </tr>
-      {% for cliente in clientes %}
-      <tr>
-        <td>{{ cliente.nome }}</td>
-        <td>{{ cliente.email }}</td>
-        <td>{{ cliente.telefone }}</td>
-        <td><a href="/excluir/{{ cliente.id }}" class="delete-btn">Excluir</a></td>
-      </tr>
-      {% endfor %}
-    </table>
-  </div>
-
-  <footer>
-    Desenvolvido por <span>Herlon</span> 🚀 | CRM Inteligente para Vendas
-  </footer>
-</body>
-</html>
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
