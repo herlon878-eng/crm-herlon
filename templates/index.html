@@ -1,46 +1,152 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>CRM - Clientes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Leads</title>
     <style>
-        body { font-family: Arial; background: #f8f8f8; padding: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #007bff; color: white; }
-        a { text-decoration: none; color: #007bff; margin-right: 10px; }
-        form { margin-bottom: 20px; background: white; padding: 20px; border-radius: 10px; width: 300px; }
-        input { width: 100%; padding: 8px; margin: 6px 0; border-radius: 5px; border: 1px solid #ccc; }
-        button { padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #f3f4f6, #e0e7ff);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-top: 30px;
+        }
+
+        form {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 350px;
+            margin-top: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        table {
+            width: 80%;
+            margin: 40px auto;
+            border-collapse: collapse;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #2563eb;
+            color: white;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        a {
+            color: #dc2626;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: #991b1b;
+        }
+
+        .top-bar {
+            width: 100%;
+            background-color: #1e3a8a;
+            color: white;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .top-bar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .top-bar a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <h2>CRM - Clientes</h2>
-    <form method="POST">
-        <input type="text" name="nome" placeholder="Nome" required>
-        <input type="email" name="email" placeholder="E-mail">
-        <input type="text" name="telefone" placeholder="Telefone">
-        <button type="submit">Adicionar</button>
+
+    <div class="top-bar">
+        <span>📋 CRM Herlon</span>
+        <a href="/logout">Sair</a>
+    </div>
+
+    <h1>Gerenciar Leads</h1>
+
+    <form action="/adicionar" method="POST">
+        <input type="text" name="nome" placeholder="Nome completo" required>
+        <input type="email" name="email" placeholder="E-mail" required>
+        <input type="text" name="telefone" placeholder="Telefone" required>
+        <button type="submit">Adicionar Lead</button>
     </form>
 
     <table>
         <tr>
+            <th>ID</th>
             <th>Nome</th>
             <th>E-mail</th>
             <th>Telefone</th>
-            <th>Ações</th>
+            <th>Ação</th>
         </tr>
         {% for cliente in clientes %}
         <tr>
+            <td>{{ cliente.id }}</td>
             <td>{{ cliente.nome }}</td>
             <td>{{ cliente.email }}</td>
             <td>{{ cliente.telefone }}</td>
-            <td>
-                <a href="/editar/{{ cliente.id }}">Editar</a>
-                <a href="/excluir/{{ cliente.id }}" onclick="return confirm('Excluir este cliente?')">Excluir</a>
-            </td>
+            <td><a href="/excluir/{{ cliente.id }}">Excluir</a></td>
         </tr>
         {% endfor %}
     </table>
+
 </body>
 </html>
