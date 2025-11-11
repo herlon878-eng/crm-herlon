@@ -1,152 +1,186 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM - Leads</title>
-    <style>
-        body {
-            font-family: "Poppins", sans-serif;
-            background: linear-gradient(135deg, #f3f4f6, #e0e7ff);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel - CRM Herlon</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
 
-        h1 {
-            text-align: center;
-            color: #1e3a8a;
-            margin-top: 30px;
-        }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(-45deg, #1b262c, #0f4c75, #3282b8, #bbe1fa);
+      background-size: 400% 400%;
+      animation: gradient 10s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #fff;
+    }
 
-        form {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 350px;
-            margin-top: 20px;
-        }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 14px;
-        }
+    header {
+      width: 100%;
+      text-align: center;
+      padding: 25px 0;
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
 
-        button {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+    .container {
+      margin-top: 40px;
+      width: 90%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
 
-        button:hover {
-            background: #1e40af;
-        }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #fff;
+    }
 
-        table {
-            width: 80%;
-            margin: 40px auto;
-            border-collapse: collapse;
-            border-radius: 10px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
 
-        th, td {
-            text-align: left;
-            padding: 14px 18px;
-            border-bottom: 1px solid #e2e8f0;
-        }
+    input[type="text"], input[type="email"], input[type="tel"] {
+      padding: 12px 15px;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+      font-size: 14px;
+      width: 100%;
+      max-width: 220px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
 
-        th {
-            background-color: #2563eb;
-            color: white;
-            text-transform: uppercase;
-            font-size: 13px;
-        }
+    input::placeholder {
+      color: rgba(255,255,255,0.8);
+    }
 
-        tr:hover {
-            background-color: #f1f5f9;
-        }
+    button {
+      padding: 12px 20px;
+      background: #00b4d8;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-        a {
-            color: #dc2626;
-            text-decoration: none;
-            font-weight: bold;
-        }
+    button:hover {
+      background: #0077b6;
+      transform: scale(1.03);
+    }
 
-        a:hover {
-            color: #991b1b;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+      color: #fff;
+    }
 
-        .top-bar {
-            width: 100%;
-            background-color: #1e3a8a;
-            color: white;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
 
-        .top-bar a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-        }
+    th {
+      background: rgba(0,0,0,0.3);
+    }
 
-        .top-bar a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    tr:nth-child(even) {
+      background: rgba(255,255,255,0.1);
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    a.delete-btn {
+      color: #ff4d4d;
+      font-weight: bold;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    a.delete-btn:hover {
+      color: #ff0000;
+    }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    footer span {
+      color: #00b4d8;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    CRM Herlon - Gestão de Leads 💼
+  </header>
 
-    <div class="top-bar">
-        <span>📋 CRM Herlon</span>
-        <a href="/logout">Sair</a>
-    </div>
-
-    <h1>Gerenciar Leads</h1>
-
-    <form action="/adicionar" method="POST">
-        <input type="text" name="nome" placeholder="Nome completo" required>
-        <input type="email" name="email" placeholder="E-mail" required>
-        <input type="text" name="telefone" placeholder="Telefone" required>
-        <button type="submit">Adicionar Lead</button>
+  <div class="container">
+    <h2>Adicionar Novo Lead</h2>
+    <form method="POST">
+      <input type="text" name="nome" placeholder="Nome completo" required>
+      <input type="email" name="email" placeholder="E-mail" required>
+      <input type="tel" name="telefone" placeholder="Telefone" required>
+      <button type="submit">Adicionar</button>
     </form>
 
+    <h2>Leads Cadastrados</h2>
     <table>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>E-mail</th>
-            <th>Telefone</th>
-            <th>Ação</th>
-        </tr>
-        {% for cliente in clientes %}
-        <tr>
-            <td>{{ cliente.id }}</td>
-            <td>{{ cliente.nome }}</td>
-            <td>{{ cliente.email }}</td>
-            <td>{{ cliente.telefone }}</td>
-            <td><a href="/excluir/{{ cliente.id }}">Excluir</a></td>
-        </tr>
-        {% endfor %}
+      <tr>
+        <th>Nome</th>
+        <th>E-mail</th>
+        <th>Telefone</th>
+        <th>Ações</th>
+      </tr>
+      {% for cliente in clientes %}
+      <tr>
+        <td>{{ cliente.nome }}</td>
+        <td>{{ cliente.email }}</td>
+        <td>{{ cliente.telefone }}</td>
+        <td><a href="/excluir/{{ cliente.id }}" class="delete-btn">Excluir</a></td>
+      </tr>
+      {% endfor %}
     </table>
+  </div>
 
+  <footer>
+    Desenvolvido por <span>Herlon</span> 🚀 | CRM Inteligente para Vendas
+  </footer>
 </body>
 </html>
