@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Administrador | CRM Herlon</title>
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .admin-container {
+            background: #fff;
+            padding: 40px 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+        }
+
+        h1 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #6b7280;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            font-size: 15px;
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #1e40af;
+        }
+
+        .footer {
+            font-size: 13px;
+            margin-top: 20px;
+            color: #64748b;
+        }
+
+        .footer a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <h1>Criar Administrador</h1>
+        <p>Defina seu nome de usuário e senha</p>
+
+        <form action="/criar_admin" method="POST">
+            <input type="text" name="usuario" placeholder="Usuário" required>
+            <input type="password" name="senha" placeholder="Senha" required>
+            <button type="submit">Criar Conta</button>
+        </form>
+
+        <div class="footer">
+            Já tem conta? <a href="/login">Fazer login</a>
+        </div>
+    </div>
+
+</body>
+</html>
