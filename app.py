@@ -38,66 +38,7 @@ def login():
             session['user'] = user.username
             return redirect(url_for('index'))
         else:
-            return "Usuário ou senha incorretos!"
-
-    return '''
-        <form method="POST">
-            <h2>Login</h2>
-            <input type="text" name="username" placeholder="Usuário" required><br>
-            <input type="password" name="senha" placeholder="Senha" required><br>
-            <button type="submit">Entrar</button>
-        </form>
-    '''
-
-# 🔐 Criar admin manualmente (usar 1x)
-@app.route('/criar_admin')
-def criar_admin():
-    if Usuario.query.filter_by(username='admin').first():
-        return "Admin já existe."
-    senha_hash = generate_password_hash("1234")
-    novo = Usuario(username='admin', senha=senha_hash)
-    db.session.add(novo)
-    db.session.commit()
-    return "Usuário admin criado com sucesso!"
-
-# 🏠 Página principal
-@app.route('/')
-def index():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    clientes = Cliente.query.all()
-    return render_template('index.html', clientes=clientes)
-
-@app.route('/adicionar', methods=['POST'])
-def adicionar():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    nome = request.form['nome']
-    email = request.form['email']
-    telefone = request.form['telefone']
-
-    novo_cliente = Cliente(nome=nome, email=email, telefone=telefone)
-    db.session.add(novo_cliente)
-    db.session.commit()
-    return redirect(url_for('index'))
-
-@app.route('/excluir/<int:id>')
-def excluir(id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    cliente = Cliente.query.get(id)
-    if cliente:
-        db.session.delete(cliente)
-        db.session.commit()
-    return redirect(url_for('index'))
-
-@app.route('/logout')
-def logout():
-    session.pop('user', None)
-    return redirect(url_for('login'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
+            erro = "Usuário ou senha incorretos!"
+            return render_template('login.html', erro=erro)
+    
+    return render_template('login.html')
