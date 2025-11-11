@@ -1,104 +1,97 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 app = Flask(__name__)
 
-# Configurações
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///crm.db')
+# Configurações principais
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///clientes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'chave_super_secreta'
+app.secret_key = 'segredo-herlon'
 
 db = SQLAlchemy(app)
 
-# ========================
-# MODELOS
-# ========================
+# Modelo de Lead
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    telefone = db.Column(db.String(20), nullable=False)
+    nome = db.Column(db.String(100), nullable=True)
+    email = db.Column(db.String(100), nullable=True)
+    telefone = db.Column(db.String(50), nullable=True)
 
-class Usuario(db.Model):
+# Modelo de Admin
+class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    usuario = db.Column(db.String(50), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
 
-# ========================
-# ROTAS
-# ========================
+with app.app_context():
+    db.create_all()
 
-@app.route('/')
+# Página inicial (leads)
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        nome = request.form.get('nome', '')
+        email = request.form.get('email', '')
+        telefone = request.form.get('telefone', '')
+
+        # Agora todos os campos são opcionais
+        novo_cliente = Cliente(nome=nome, email=email, telefone=telefone)
+        db.session.add(novo_cliente)
+        db.session.commit()
+
+        flash('✅ Lead cadastrado com sucesso!')
+        return redirect(url_for('index'))
+
     clientes = Cliente.query.all()
     return render_template('index.html', clientes=clientes)
 
-@app.route('/adicionar', methods=['POST'])
-def adicionar():
-    nome = request.form['nome']
-    email = request.form['email']
-    telefone = request.form['telefone']
-    novo = Cliente(nome=nome, email=email, telefone=telefone)
-    db.session.add(novo)
-    db.session.commit()
-    return redirect(url_for('index'))
-
+# Excluir lead
 @app.route('/excluir/<int:id>')
 def excluir(id):
     cliente = Cliente.query.get(id)
     if cliente:
         db.session.delete(cliente)
         db.session.commit()
+        flash('❌ Lead excluído com sucesso!')
     return redirect(url_for('index'))
 
-# ========================
-# LOGIN / ADMIN
-# ========================
+# Criar admin
+@app.route('/criar_admin', methods=['GET', 'POST'])
+def criar_admin():
+    if request.method == 'POST':
+        usuario = request.form.get('usuario')
+        senha = request.form.get('senha')
 
+        if usuario and senha:
+            senha_hash = generate_password_hash(senha)
+            novo_admin = Admin(usuario=usuario, senha=senha_hash)
+            db.session.add(novo_admin)
+            db.session.commit()
+            return "✅ Admin criado com sucesso!"
+        else:
+            return "❌ Preencha todos os campos!"
+    return render_template('criar_admin.html')
+
+# Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        senha = request.form['senha']
-        usuario = Usuario.query.filter_by(username=username).first()
+        usuario = request.form.get('usuario')
+        senha = request.form.get('senha')
 
-        if usuario and check_password_hash(usuario.senha, senha):
-            session['usuario'] = usuario.username
+        admin = Admin.query.filter_by(usuario=usuario).first()
+        if admin and check_password_hash(admin.senha, senha):
             return redirect(url_for('index'))
         else:
-            return "Usuário ou senha incorretos"
+            return "❌ Usuário ou senha incorretos."
+    return render_template('login.html')
 
-    return '''
-        <h2>Login</h2>
-        <form method="post">
-            <input name="username" placeholder="Usuário"><br>
-            <input name="senha" type="password" placeholder="Senha"><br>
-            <button type="submit">Entrar</button>
-        </form>
-    '''
+# Erro 404 redireciona para index
+@app.errorhandler(404)
+def pagina_nao_encontrada(e):
+    return redirect(url_for('index'))
 
-@app.route('/logout')
-def logout():
-    session.pop('usuario', None)
-    return redirect(url_for('login'))
-
-@app.route('/criar_admin')
-def criar_admin():
-    if not Usuario.query.filter_by(username='admin').first():
-        senha_hash = generate_password_hash('1234')
-        admin = Usuario(username='admin', senha=senha_hash)
-        db.session.add(admin)
-        db.session.commit()
-        return "Usuário admin criado com sucesso! (usuário: admin, senha: 1234)"
-    else:
-        return "Usuário admin já existe."
-
-# ========================
-# INICIALIZAÇÃO
-# ========================
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', debug=True)
