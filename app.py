@@ -1,64 +1,96 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_bcrypt import Bcrypt
 import os
 
 app = Flask(__name__)
+app.secret_key = 'chave-secreta-super-segura'  # troque depois
 
-# Banco de dados da Render
+# Configuração do banco
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL').replace("postgres://", "postgresql://")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-# Modelo de Cliente
-class Cliente(db.Model):
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+# ------------------ MODELOS ------------------
+
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+
+class Lead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100))
     email = db.Column(db.String(100))
     telefone = db.Column(db.String(20))
 
-    def __init__(self, nome, email, telefone):
-        self.nome = nome
-        self.email = email
-        self.telefone = telefone
+# ------------------ LOGIN ------------------
 
-# Rota principal (listar e adicionar)
-@app.route('/', methods=['GET', 'POST'])
-def index():
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
-        nome = request.form['nome']
-        email = request.form['email']
-        telefone = request.form['telefone']
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Usuário ou senha incorretos.')
+    return render_template('login.html')
 
-        novo_cliente = Cliente(nome, email, telefone)
-        db.session.add(novo_cliente)
-        db.session.commit()
-        return redirect(url_for('index'))
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
-    clientes = Cliente.query.all()
-    return render_template('index.html', clientes=clientes)
+# ------------------ ROTAS PRINCIPAIS ------------------
 
-# Rota para excluir cliente
-@app.route('/excluir/<int:id>')
-def excluir(id):
-    cliente = Cliente.query.get(id)
-    if cliente:
-        db.session.delete(cliente)
-        db.session.commit()
+@app.route('/')
+@login_required
+def index():
+    leads = Lead.query.all()
+    return render_template('index.html', leads=leads)
+
+@app.route('/adicionar', methods=['POST'])
+@login_required
+def adicionar():
+    nome = request.form['nome']
+    email = request.form['email']
+    telefone = request.form['telefone']
+    novo = Lead(nome=nome, email=email, telefone=telefone)
+    db.session.add(novo)
+    db.session.commit()
     return redirect(url_for('index'))
 
-# Rota para editar cliente
-@app.route('/editar/<int:id>', methods=['GET', 'POST'])
-def editar(id):
-    cliente = Cliente.query.get(id)
-    if request.method == 'POST':
-        cliente.nome = request.form['nome']
-        cliente.email = request.form['email']
-        cliente.telefone = request.form['telefone']
-        db.session.commit()
-        return redirect(url_for('index'))
-    return render_template('editar.html', cliente=cliente)
+@app.route('/excluir/<int:id>')
+@login_required
+def excluir(id):
+    lead = Lead.query.get(id)
+    db.session.delete(lead)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+# ------------------ CRIAR USUÁRIO ADMIN ------------------
+
+@app.route('/criar_admin')
+def criar_admin():
+    """Cria um usuário admin padrão (use apenas uma vez e depois apague)."""
+    hashed_pw = bcrypt.generate_password_hash("admin123").decode('utf-8')
+    novo_user = User(username="admin", password=hashed_pw)
+    db.session.add(novo_user)
+    db.session.commit()
+    return "Usuário admin criado!"
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=10000)
+    app.run(debug=True)
